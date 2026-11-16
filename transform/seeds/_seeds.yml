@@ -1,0 +1,18 @@
+version: 2
+
+seeds:
+  - name: known_header_gaps
+    description: >
+      Source documents whose header amount is allowed to disagree with the
+      sum of line amounts plus freight. Any other residual fails the build.
+      The row is a property of the synthetic extract, not a pipeline tolerance.
+    columns:
+      - name: source_system
+        data_tests: [not_null]
+      - name: sales_document
+        data_tests: [not_null]
+      - name: expected_residual
+        description: Header net minus line net minus header freight.
+        data_tests: [not_null]
+      - name: reason
+        data_tests: [not_null]

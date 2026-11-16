@@ -1,0 +1,2 @@
+source_system,sales_document,expected_residual,reason
+ORACLE_EBS,500421,25.00,Header amount exceeds the sum of lines and freight with no freight code
