@@ -1,0 +1,47 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Tables loaded from the parquet lake into DuckDB schema raw.
+      On Snowflake the same table names live in the RAW schema.
+      Customer current tables are replaced between the two snapshot passes.
+      History tables arrive with the second extract.
+    schema: raw
+    tables:
+      - name: sap_vbak
+        description: SAP ECC sales document header. Freight is a stand-in for an unallocated header condition.
+      - name: sap_vbap
+        description: SAP ECC sales document item. ABGRU null means the line is not rejected.
+      - name: sap_kna1
+        description: >
+          Current SAP customer master. One planted duplicate KUNNR is retained
+          so staging stays one row per extract row.
+      - name: sap_kna1_history
+        description: SAP customer attribute history with a business effective date. Not produced by the dbt snapshot.
+      - name: sap_mara
+        description: SAP material master. MAKTX is the English description flattened from MAKT. No price; price is on the order line.
+      - name: sap_afko
+        description: >
+          SAP production order header. Status is a single code (CRTD, PCNF, TECO),
+          not the full JEST status set. scrap_qty is a simplified confirmation quantity.
+      - name: oracle_oe_order_headers_all
+        description: >
+          Oracle EBS order header. sold_to_customer_id is the HZ account id.
+          A real extract joins sold_to_org_id through site uses; that hop is flattened here.
+      - name: oracle_oe_order_lines_all
+        description: Oracle EBS order line. extended_price is quantity times unit price, negative on returns.
+      - name: oracle_hz_cust_accounts
+        description: Current Oracle customer account, with party and address attributes flattened onto the account.
+      - name: oracle_hz_cust_accounts_history
+        description: Oracle customer attribute history with a business effective date.
+      - name: oracle_mtl_system_items_b
+        description: Oracle item master. Price is not stored here; it is stamped on the order line.
+      - name: oracle_wip_discrete_jobs
+        description: Oracle discrete job. status_type is the decoded status name.
+      - name: ref_plants
+        description: Plant and inventory organization reference for both ERPs.
+      - name: ref_fx_rates
+        description: >
+          Synthetic daily USD rates. Not market data. Multiply a document amount
+          by usd_rate to get USD.

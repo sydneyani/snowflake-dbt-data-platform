@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: int_customer_current
+    description: Deduplicated current customer master. Source for the dbt snapshot.
+    columns:
+      - name: customer_business_key
+        data_tests: [unique, not_null]
+      - name: source_system
+        data_tests: [not_null]
+      - name: source_customer_id
+        data_tests: [not_null]
+      - name: updated_at
+        data_tests: [not_null]
+
+  - name: int_customer_versions
+    description: Business-dated customer history built with lead(), not from the snapshot.
+    columns:
+      - name: customer_business_key
+        data_tests: [not_null]
+      - name: effective_from
+        data_tests: [not_null]
+
+  - name: int_sap_sales_lines
+    description: SAP lines joined to header and deduplicated customer. No rows removed.
+    columns:
+      - name: sales_document
+        data_tests: [not_null]
+      - name: line_number
+        data_tests: [not_null]
+
+  - name: int_oracle_sales_lines
+    description: Oracle lines joined to header and deduplicated customer. No rows removed.
+    columns:
+      - name: sales_document
+        data_tests: [not_null]
+      - name: line_number
+        data_tests: [not_null]
+
+  - name: int_sales_lines
+    description: Conformed sales lines plus exclusion_reason and USD amount.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [source_system, sales_document, line_number]
+    columns:
+      - name: source_system
+        data_tests: [not_null]
+      - name: net_amount_doc
+        data_tests: [not_null]
+      - name: exclusion_reason
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['TEST_ACCOUNT', 'CANCELLED', 'REJECTED_LINE', 'INVALID_CURRENCY', 'MISSING_QUANTITY', 'MISSING_FX']
+                where: "exclusion_reason is not null"
+
+  - name: int_sales_headers
+    description: Conformed sales document headers, including freight.
+    columns:
+      - name: sales_document
+        data_tests: [not_null]
+      - name: header_net_amount
+        data_tests: [not_null]
+
+  - name: int_products
+    description: Conformed item master. One row per ERP item, matched across ERPs by GTIN.
+    columns:
+      - name: product_business_key
+        data_tests: [unique, not_null]
+      - name: base_uom
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['EA']
+
+  - name: int_work_orders
+    description: Conformed production orders and discrete jobs.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [source_system, work_order_number]
+    columns:
+      - name: status_group
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['CREATED', 'IN_PROCESS', 'CLOSED']
+      - name: planned_qty
+        data_tests: [not_null]

@@ -1,0 +1,133 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Calendar day from 2024-01-01 through 2026-12-31. Fiscal year starts in July.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: dim_source_system
+    description: One row per ERP present in sales or work orders.
+    columns:
+      - name: source_system_key
+        data_tests: [unique, not_null]
+      - name: source_system_code
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['SAP_ECC', 'ORACLE_EBS']
+
+  - name: dim_plant
+    description: Plant or inventory organization.
+    columns:
+      - name: plant_key
+        data_tests: [unique, not_null]
+
+  - name: dim_product
+    description: Source item. Not slowly changing. Cross-ERP match is the GTIN.
+    columns:
+      - name: product_key
+        data_tests: [unique, not_null]
+      - name: product_business_key
+        data_tests: [unique, not_null]
+
+  - name: dim_customer
+    description: SCD2 source customer. effective_from and effective_to come from the dbt snapshot.
+    columns:
+      - name: customer_key
+        data_tests: [unique, not_null]
+      - name: customer_business_key
+        data_tests: [not_null]
+      - name: effective_from
+        data_tests: [not_null]
+
+  - name: fct_sales_order_lines
+    description: >
+      Accepted sales lines only. Customer key is the version effective on the
+      order date. Excluded lines are in mart_sales_line_exceptions.
+    columns:
+      - name: sales_line_key
+        data_tests: [unique, not_null]
+      - name: customer_key
+        data_tests: [not_null]
+      - name: product_key
+        data_tests: [not_null]
+      - name: plant_key
+        data_tests: [not_null]
+      - name: source_system_key
+        data_tests: [not_null]
+      - name: ordered_qty
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                strictly: false
+      - name: currency_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['USD', 'EUR', 'GBP']
+      - name: net_amount_usd
+        data_tests: [not_null]
+      - name: order_date
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fct_work_orders
+    description: One row per production order or discrete job, including open jobs.
+    columns:
+      - name: work_order_key
+        data_tests: [unique, not_null]
+      - name: product_key
+        data_tests: [not_null]
+      - name: plant_key
+        data_tests: [not_null]
+      - name: planned_qty
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                strictly: false
+
+  - name: mart_sales_line_exceptions
+    description: Sales lines removed from the fact, with one exclusion reason each.
+    columns:
+      - name: exclusion_reason
+        data_tests: [not_null]
+
+  - name: mart_sales_monthly
+    description: >
+      Monthly sales by source, plant, and document currency.
+      net_amount_doc must not be summed across currency_code.
+      order_count is distinct documents; each document has one plant in this dataset.
+    columns:
+      - name: sales_month
+        data_tests: [not_null]
+      - name: line_count
+        data_tests: [not_null]
+
+  - name: bridge_shared_customer
+    description: Current ERP accounts that share a tax id. global_customer_id is that tax id.
+    columns:
+      - name: global_customer_id
+        data_tests: [not_null]
+      - name: customer_key
+        data_tests: [not_null]
+
+  - name: bridge_shared_product
+    description: Items that share a GTIN across ERPs.
+    columns:
+      - name: gtin
+        data_tests: [not_null]
+      - name: product_key
+        data_tests: [not_null]

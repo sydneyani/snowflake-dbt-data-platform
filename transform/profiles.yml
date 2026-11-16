@@ -1,0 +1,9 @@
+# Local profile. No secrets. The Snowflake target lives in profiles.yml.example.
+meridian:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('MERIDIAN_DUCKDB_PATH', 'data/warehouse/meridian.duckdb') }}"
+      schema: meridian
+      threads: 4

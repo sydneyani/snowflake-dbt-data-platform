@@ -1,0 +1,33 @@
+# Copy over profiles.yml when you want the Snowflake target.
+# DuckDB remains the default so CI and a laptop do not need a warehouse account.
+#
+# Snowflake auth is key-pair. Do not commit the private key.
+#   export SNOWFLAKE_ACCOUNT=org-account
+#   export SNOWFLAKE_USER=...
+#   export SNOWFLAKE_PRIVATE_KEY_PATH=~/.ssh/snowflake_meridian.p8
+#   export SNOWFLAKE_ROLE=TRANSFORMER
+#   export SNOWFLAKE_WAREHOUSE=TRANSFORMING
+#   export SNOWFLAKE_DATABASE=MERIDIAN
+#   uv sync --extra snowflake
+#   uv run dbt build --project-dir transform --profiles-dir transform --target snowflake
+
+meridian:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('MERIDIAN_DUCKDB_PATH', 'data/warehouse/meridian.duckdb') }}"
+      schema: meridian
+      threads: 4
+    snowflake:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'TRANSFORMER') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TRANSFORMING') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'MERIDIAN') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'MERIDIAN') }}"
+      threads: 8
+      client_session_keep_alive: false
+      query_tag: meridian_dbt

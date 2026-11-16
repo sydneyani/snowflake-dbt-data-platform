@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: stg_sap__vbak
+    description: Renamed SAP sales document header. One row per extract row.
+    columns:
+      - name: sales_document
+        data_tests: [unique, not_null]
+      - name: order_date
+        data_tests: [not_null]
+  - name: stg_sap__vbap
+    description: Renamed SAP sales document item. One row per extract row.
+    columns:
+      - name: sales_document
+        data_tests: [not_null]
+      - name: line_number
+        data_tests: [not_null]
+  - name: stg_sap__kna1
+    description: Renamed SAP customer master, including the planted duplicate row.
+    columns:
+      - name: source_customer_id
+        data_tests: [not_null]
+  - name: stg_sap__kna1_history
+    description: Renamed SAP customer history. One row per customer and effective date.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [source_customer_id, effective_date]
+  - name: stg_sap__mara
+    description: Renamed SAP material master. Description is the MAKT text flattened onto the extract.
+    columns:
+      - name: source_product_id
+        data_tests: [unique, not_null]
+  - name: stg_sap__afko
+    description: Renamed SAP production order header.
+    columns:
+      - name: work_order_number
+        data_tests: [unique, not_null]
+  - name: stg_oracle__oe_order_headers_all
+    description: Renamed Oracle order header.
+    columns:
+      - name: sales_document
+        data_tests: [unique, not_null]
+  - name: stg_oracle__oe_order_lines_all
+    description: Renamed Oracle order line. line_number is cast to varchar.
+    columns:
+      - name: sales_document
+        data_tests: [not_null]
+  - name: stg_oracle__hz_cust_accounts
+    description: Renamed Oracle customer account with party attributes flattened on.
+    columns:
+      - name: source_customer_id
+        data_tests: [unique, not_null]
+  - name: stg_oracle__hz_cust_accounts_history
+    description: Renamed Oracle customer history.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [source_customer_id, effective_date]
+  - name: stg_oracle__mtl_system_items_b
+    description: Renamed Oracle item master.
+    columns:
+      - name: source_product_id
+        data_tests: [unique, not_null]
+  - name: stg_oracle__wip_discrete_jobs
+    description: Renamed Oracle discrete job. status_code is the decoded status name.
+    columns:
+      - name: work_order_number
+        data_tests: [unique, not_null]
+  - name: stg_reference__plants
+    description: Plant reference for both ERPs.
+    columns:
+      - name: plant_code
+        data_tests: [not_null]
+  - name: stg_reference__fx_rates
+    description: Synthetic daily USD conversion rates.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [rate_date, currency_code]
