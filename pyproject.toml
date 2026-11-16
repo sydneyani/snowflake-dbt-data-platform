@@ -1,0 +1,66 @@
+[project]
+name = "snowflake-dbt-data-platform"
+version = "1.0.0"
+description = "Multi-ERP ELT platform for SAP ECC and Oracle EBS sales and work-order analytics. DuckDB locally, Snowflake-ready."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+authors = [{ name = "Sydney Ani" }]
+keywords = ["dbt", "duckdb", "snowflake", "dagster", "elt", "data-quality"]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: SQL",
+]
+dependencies = [
+    "dagster==1.13.30",
+    "dagster-dbt==0.29.30",
+    "dagster-webserver==1.13.30",
+    "dbt-core>=1.10,<1.13",
+    "dbt-duckdb==1.11.1",
+    "duckdb>=1.1,<3",
+    "pyarrow>=18",
+]
+
+[project.optional-dependencies]
+snowflake = [
+    "dbt-snowflake==1.12.5",
+    "snowflake-connector-python>=4.2,<6",
+]
+
+[project.scripts]
+meridian-extract = "meridian.ingest.cli:main"
+meridian-pipeline = "meridian.pipeline:main"
+meridian-reconcile = "meridian.quality.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.11",
+    "sqlfluff>=3.4",
+    "sqlfluff-templater-dbt==4.5.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/meridian"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/meridian/quality/report.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "integration: runs the full ELT pipeline",
+]
