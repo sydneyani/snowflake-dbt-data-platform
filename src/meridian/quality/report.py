@@ -40,7 +40,7 @@ def _html(report: ReconciliationReport) -> str:
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Meridian reconciliation { _esc(report.generated_at) }</title>
+<title>Meridian reconciliation {_esc(report.generated_at)}</title>
 <style>
 body {{ font-family: Georgia, serif; margin: 2rem auto; max-width: 1100px; color: #1c1917; }}
 h1 {{ font-weight: 500; }}
@@ -55,12 +55,12 @@ th {{ font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color:
 </head>
 <body>
 <h1>Source-to-target reconciliation</h1>
-<p class="banner {status.lower()}">Pipeline status { _esc(status) }. Seed {report.seed}. Generated {_esc(report.generated_at)}.</p>
+<p class="banner {status.lower()}">Pipeline status {_esc(status)}. Seed {report.seed}. Generated {_esc(report.generated_at)}.</p>
 <p>{_esc(report.summary)}</p>
 <table>
 <thead><tr><th>Check</th><th>Status</th><th>Source</th><th>Target</th><th>Variance</th><th>Detail</th></tr></thead>
 <tbody>
-{''.join(rows)}
+{"".join(rows)}
 </tbody>
 </table>
 </body>
@@ -71,8 +71,5 @@ th {{ font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color:
 def _esc(value: object) -> str:
     text = "" if value is None else str(value)
     return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     )
