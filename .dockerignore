@@ -1,0 +1,9 @@
+.venv
+.git
+data
+transform/target
+transform/dbt_packages
+transform/logs
+**/__pycache__
+.pytest_cache
+.ruff_cache
